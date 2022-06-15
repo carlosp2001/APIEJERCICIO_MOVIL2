@@ -1,14 +1,32 @@
 const {validationResult} = require('express-validator');
+const Cargo = require('../modelos/modeloCargo');
 const modeloEmpleado = require('../modelos/modeloEmpleados');
-
+const { Op } = require('sequelize');
+ 
 exports.Listar = async (req, res) => {
     try {
-        const lista = await modeloEmpleado.findAll();
+        const lista = await modeloEmpleado.findAll(
+            {
+                attributes: ['nombre', 'apellido'],
+                include: {
+                    model: Cargo,
+                    attributes: ['nombre']
+                },
+                where: {
+                    [Op.and]: [
+                        { salario: { [Op.gt]: 10000 } },
+                        {salario: {[Op.lt]: 20000}}
+
+                    ]
+                    
+                }
+
+            });
         console.log(lista);
         res.json(lista);
     } catch (error) {
-        console.error(error);
-        res.json(error);
+        // console.error(error);
+        // res.json(error);
     }
 };
 

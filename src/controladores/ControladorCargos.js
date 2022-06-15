@@ -55,7 +55,7 @@ exports.Editar = async (req, res) =>{
         mensaje: ' '
     };
     if (validaciones.errors.length > 0) {
-        // validaciones.errors.array.forEach(element => {
+        // validaciones.errors.aÍÍrray.forEach(element => {
         //     msj.mensaje += element.msg + '. ';
         // });
     }
