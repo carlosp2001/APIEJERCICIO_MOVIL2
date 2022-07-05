@@ -9,4 +9,9 @@ rutas.post('/recuperar',
         .isEmail().withMessage('El correo debe ser valido'),
     controladroAutenticacion.RecuperarContrasena);
 
+    rutas.post('/iniciarsesion',
+    body('usuario')
+        .notEmpty().withMessage('No se aaceptan valores vacios para el usuario'),
+    controladroAutenticacion.IniciarSesion);
+
 module.exports = rutas;

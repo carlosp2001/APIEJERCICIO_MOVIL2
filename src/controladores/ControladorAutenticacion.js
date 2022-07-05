@@ -3,7 +3,9 @@ const { validationResult } = require('express-validator');
 const MSJ = require('../componentes/mensajes');
 const correo = require('../configuraciones/correo')
 const Usuario = require('../modelos/modeloUsuarios');
-const EnviarCorreo = require('../configuraciones/correo')
+const EnviarCorreo = require('../configuraciones/correo');
+const gpc = require('generate-pincode');
+const { Op } = require('sequelize');
 
 function validar(req) {
     const validaciones = validationResult(req);
@@ -46,7 +48,7 @@ exports.RecuperarContrasena = async (req, res) => {
                 }
             });
             if (buscarUsuario) {
-                const pin = '1234';
+                const pin = gpc(4);
                 buscarUsuario.pin = pin;
                 await buscarUsuario.save();
                 const data = {
@@ -74,8 +76,51 @@ exports.RecuperarContrasena = async (req, res) => {
             msj.mensaje = 'La peticion no se ejecuto';
             msj.errores = error;
             MSJ(res, 500, msj);
-
         }    
     }
 };
 
+exports.IniciarSesion = async (req, res) => {
+    const msj = validar(req);
+    if (msj.errores.length > 0) {
+        MSJ(res, 200, msj);
+    } else {
+        try {
+            const { usuario } = req.body;
+            var buscarUsuario = await Usuario.findOne({
+                where: {
+                    [Op.or]: [{correo: usuario}, {login: usuario}]
+                  }
+            });
+            if (buscarUsuario) {
+                const pin = gpc(4);
+                buscarUsuario.pin = pin;
+                await buscarUsuario.save();
+                const data = {
+                    pin,
+                    correo
+                };
+                EnviarCorreo.RecuperarContrasena(data);
+                estado = 'correcto';
+                mensaje = 'Peticion ejecutada correctamente';
+                datos = '';
+                errores = '';
+                MSJ(res, 200, msj);
+            }
+            else {
+                msj.estado = 'precaucion';
+                msj.mensaje = 'El id de registro de usuario no existe';
+                msj.errores = {
+                    mensaje: 'El correo no existe o no esta vinculado a ningun usuario',
+                    parametro: 'correo'
+                }
+                MSJ(res, 200, msj);
+            }
+        } catch (error) {
+            msj.estado = 'Precaucion';
+            msj.mensaje = 'La peticion no se ejecuto';
+            msj.errores = error;
+            MSJ(res, 500, msj);
+        }    
+    }
+};
